@@ -1,0 +1,55 @@
+// Deposit & Withdraw Funds
+// Manage Orders - Make or Cancel
+// Handle Trades - Charge fees
+pragma solidity ^0.8.0;
+
+import "./Token.sol";
+// TODO:
+// [X] Set the fee account
+// [] Deposit Ether
+// [] Withdraw Ether
+// [] Deposit JJC
+// [] Withdraw JJC
+// [] Check balances
+// [] Make order
+// [] Cancel order
+// [] Fill order
+// [] Charge fees
+
+contract Exchange {
+    //Variables
+    address public feeAccount; // the account that receives exchange fees
+    uint256 public feePercent;
+    address constant ETHER = address(0); // allows to store Ether in token mappings to save storage space on the contract
+    mapping(address => mapping(address => uint256)) public tokens;  //first key is token address (which token?) second is the address of the user
+
+
+    //Events
+    event Deposit(address token, address user, uint256 amount, uint256 balance);
+
+
+    constructor(address _feeAccount, uint256  _feePercent) {
+        feeAccount = _feeAccount;
+        feePercent = _feePercent;
+    }
+
+    // Used to handle direct transfer to the address
+    fallback() external payable {
+        revert();
+    }
+
+    function depositEther() public payable{
+        tokens[ETHER][msg.sender] += msg.value;
+        emit Deposit(ETHER, msg.sender, msg.value, tokens[ETHER][msg.sender]);
+    }
+
+    function depositToken(address _token, uint _amount) public {
+        require(_token != ETHER);
+        // you must approve this token in front-end (and/or tests) b4 deposit
+        require(Token(_token).transferFrom(msg.sender, address(this), _amount));
+        tokens[_token][msg.sender] += _amount;
+        emit Deposit(_token, msg.sender, _amount, tokens[_token][msg.sender]);
+
+    }
+}
+
