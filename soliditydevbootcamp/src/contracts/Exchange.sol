@@ -6,11 +6,11 @@ pragma solidity ^0.8.0;
 import "./Token.sol";
 // TODO:
 // [X] Set the fee account
-// [] Deposit Ether
-// [] Withdraw Ether
-// [] Deposit JJC
-// [] Withdraw JJC
-// [] Check balances
+// [X] Deposit Ether
+// [X] Withdraw Ether
+// [X] Deposit JJC
+// [X] Withdraw JJC
+// [X] Check balances
 // [] Make order
 // [] Cancel order
 // [] Fill order
@@ -22,11 +22,41 @@ contract Exchange {
     uint256 public feePercent;
     address constant ETHER = address(0); // allows to store Ether in token mappings to save storage space on the contract
     mapping(address => mapping(address => uint256)) public tokens;  //first key is token address (which token?) second is the address of the user
-
+    mapping(uint256 => _Order) public orders; //Orders' book
+    mapping(uint256 => bool) public orderCanceled;
+    uint256 public orderCount = 0;
 
     //Events
     event Deposit(address token, address user, uint256 amount, uint256 balance);
     event Withdraw(address token, address user, uint256 amount, uint256 balance);
+    event Order (
+        uint id,
+        address user,
+        address tokenGet,
+        uint amountGet,
+        address tokenGive,
+        uint amountGive,
+        uint timestamp
+    );
+    event Cancel (
+        uint id,
+        address user,
+        address tokenGet,
+        uint amountGet,
+        address tokenGive,
+        uint amountGive,
+        uint timestamp
+    );
+
+    struct _Order {
+        uint id;
+        address user;
+        address tokenGet;
+        uint amountGet;
+        address tokenGive;
+        uint amountGive;
+        uint timestamp;
+    }
 
 
     constructor(address _feeAccount, uint256  _feePercent) {
@@ -69,6 +99,20 @@ contract Exchange {
 
     function balanceOf(address _token, address _user) public view returns (uint256){
         return tokens[_token][_user];
+    }
+
+    function makeOrder(address _tokenGet, uint256 _amountGet, address _tokenGive, uint256 _amountGive) public {
+        orderCount += 1;
+        orders[orderCount] = _Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, block.timestamp);
+        emit Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, block.timestamp);
+    }
+
+    function cancelOrder(uint256 _id) public {
+        _Order storage _order = orders[_id];
+        require(address(_order.user) == msg.sender);
+        require(_order.id == _id);
+        orderCanceled[_id] = true;
+        emit Cancel(_order.id, msg.sender, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive, _order.timestamp);
     }
 }
 
