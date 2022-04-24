@@ -1,6 +1,3 @@
-// Deposit & Withdraw Funds
-// Manage Orders - Make or Cancel
-// Handle Trades - Charge fees
 pragma solidity ^0.8.0;
 
 import "./Token.sol";
@@ -11,10 +8,10 @@ import "./Token.sol";
 // [X] Deposit JJC
 // [X] Withdraw JJC
 // [X] Check balances
-// [] Make order
-// [] Cancel order
-// [] Fill order
-// [] Charge fees
+// [X] Make order
+// [X] Cancel order
+// [X] Fill order
+// [X] Charge fees
 
 contract Exchange {
     //Variables
@@ -24,6 +21,7 @@ contract Exchange {
     mapping(address => mapping(address => uint256)) public tokens;  //first key is token address (which token?) second is the address of the user
     mapping(uint256 => _Order) public orders; //Orders' book
     mapping(uint256 => bool) public orderCanceled;
+    mapping(uint256 => bool) public orderFilled;
     uint256 public orderCount = 0;
 
     //Events
@@ -46,6 +44,16 @@ contract Exchange {
         address tokenGive,
         uint amountGive,
         uint timestamp
+    );
+    event Trade(
+        uint256 id,
+        address user,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive,
+        address userFill,
+        uint256 timestamp
     );
 
     struct _Order {
@@ -113,6 +121,28 @@ contract Exchange {
         require(_order.id == _id);
         orderCanceled[_id] = true;
         emit Cancel(_order.id, msg.sender, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive, _order.timestamp);
+    }
+
+        function fillOrder(uint256 _id) public {
+        require(_id > 0 && _id <= orderCount, 'Error, wrong id');
+        require(!orderFilled[_id], 'Error, order already filled');
+        require(!orderCanceled[_id], 'Error, order already cancelled');
+        _Order storage _order = orders[_id];
+        _trade(_order.id, _order.user, _order.tokenGet, _order.amountGet, _order.tokenGive, _order.amountGive);
+        orderFilled[_order.id] = true;
+    }
+
+    function _trade(uint256 _orderId, address _user, address _tokenGet, uint256 _amountGet, address _tokenGive, uint256 _amountGive) internal {
+        // Fee paid by the user that fills the order, a.k.a. msg.sender.
+        uint256 _feeAmount = _amountGet*feePercent/100;
+
+        tokens[_tokenGet][msg.sender] -= (_amountGet + _feeAmount);
+        tokens[_tokenGet][_user] += _amountGet;
+        tokens[_tokenGet][feeAccount] += _feeAmount;
+        tokens[_tokenGive][_user] -= _amountGive;
+        tokens[_tokenGive][msg.sender] += _amountGive;
+
+        emit Trade(_orderId, _user, _tokenGet, _amountGet, _tokenGive, _amountGive, msg.sender, block.timestamp);
     }
 }
 
