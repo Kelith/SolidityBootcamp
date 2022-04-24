@@ -4,7 +4,7 @@ import Web3 from 'web3'
 import Token from '../abis/Token.json'
 
 class App extends Component {
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.loadBlockchainData()
   }
 
