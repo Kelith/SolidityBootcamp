@@ -68,5 +68,4 @@ export const loadAllOrders = async (exchange, dispatch) => {
   const orderStream = await exchange.getPastEvents('Order', {fromBlock: 0, toBlock: 'latest'})
   const allOrders = orderStream.map((event) => event.returnValues)
   dispatch(allOrdersLoaded(allOrders))
-
 }
