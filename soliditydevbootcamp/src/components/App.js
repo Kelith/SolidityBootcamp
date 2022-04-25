@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import './App.css';
 import Navbar from './Navbar';
+import Content from './Content'
+import { contractsLoadedSelector } from '../store/selectors';
 import { loadWeb3, loadAccount, loadToken, loadExchange } from '../store/interactions';
 import Token from '../abis/Token.json'
 
@@ -12,11 +14,19 @@ class App extends Component {
   }
 
   async loadBlockchainData(dispatch) {
-    const web3 = loadWeb3(dispatch)
+    const web3 = await loadWeb3(dispatch)
     const networkId = await web3.eth.net.getId()
-    const account = await loadAccount(web3,dispatch)
-    const token = loadToken(web3, networkId, dispatch)
-    const exchange = loadExchange(web3,networkId,dispatch)
+    await loadAccount(web3, dispatch)
+    const token = await loadToken(web3, networkId, dispatch)
+    if(!token) {
+      window.alert('Token smart contract not detected on the current network. Please select another network with Metamask.')
+      return
+    }
+    const exchange = await loadExchange(web3, networkId, dispatch)
+    if(!exchange) {
+      window.alert('Exchange smart contract not detected on the current network. Please select another network with Metamask.')
+      return
+    }
   }
 
   render() {
@@ -24,70 +34,8 @@ class App extends Component {
       
       <div>
         <Navbar/>
-        <div className="content">
-          <div className="vertical-split">
-            <div className="card bg-dark text-white">
-              <div className="card-header">
-                Card Title
-              </div>
-              <div className="card-body">
-                <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <a href="/#" className="card-link">Card link</a>
-              </div>
-            </div>
-            <div className="card bg-dark text-white">
-              <div className="card-header">
-                Card Title
-              </div>
-              <div className="card-body">
-                <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <a href="/#" className="card-link">Card link</a>
-              </div>
-            </div>
-          </div>
-          <div className="vertical">
-            <div className="card bg-dark text-white">
-              <div className="card-header">
-                Card Title
-              </div>
-              <div className="card-body">
-                <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <a href="/#" className="card-link">Card link</a>
-              </div>
-            </div>
-          </div>
-          <div className="vertical-split">
-            <div className="card bg-dark text-white">
-              <div className="card-header">
-                Card Title
-              </div>
-              <div className="card-body">
-                <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <a href="/#" className="card-link">Card link</a>
-              </div>
-            </div>
-            <div className="card bg-dark text-white">
-              <div className="card-header">
-                Card Title
-              </div>
-              <div className="card-body">
-                <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <a href="/#" className="card-link">Card link</a>
-              </div>
-            </div>
-          </div>
-          <div className="vertical">
-            <div className="card bg-dark text-white">
-              <div className="card-header">
-                Card Title
-              </div>
-              <div className="card-body">
-                <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <a href="/#" className="card-link">Card link</a>
-              </div>
-            </div>
-          </div>
-        </div>
+        {this.props.contractsLoaded ? <Content/> : <div className="content"/>}
+        
       </div>
     );
   }
@@ -96,6 +44,7 @@ class App extends Component {
 
 function mapStateToProps(state) {
   return{
+    contractsLoaded: contractsLoadedSelector(state)
   }
 }
 export default connect(mapStateToProps)(App);
