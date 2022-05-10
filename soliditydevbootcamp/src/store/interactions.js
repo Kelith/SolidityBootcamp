@@ -6,14 +6,16 @@ import {
   exchangeLoaded,
   cancelledOrdersLoaded,
   filledOrdersLoaded,
-  allOrdersLoaded 
+  allOrdersLoaded,
+  orderCancelling,
+  orderCancelled
 } from './actions'
 import Token from '../abis/Token.json'
 import Exchange from '../abis/Exchange.json'
 
 export const loadWeb3 = async (dispatch) => {
   if(typeof window.ethereum!=='undefined'){
-    const web3 = new Web3('http://localhost:7545')
+    const web3 = new Web3(window.ethereum)
     dispatch(web3Loaded(web3))
     return web3
   } else {
@@ -57,15 +59,41 @@ export const loadExchange = async (web3, networkId, dispatch) => {
 }
 
 export const loadAllOrders = async (exchange, dispatch) => {
-  const cancelStream = await exchange.getPastEvents('Cancel', {fromBlock: 0, toBlock: 'latest'})
+  // Fetch cancelled orders with the "Cancel" event stream
+  const cancelStream = await exchange.getPastEvents('Cancel', { fromBlock: 0, toBlock: 'latest' })
+  // Format cancelled orders
   const cancelledOrders = cancelStream.map((event) => event.returnValues)
+  // Add cancelled orders to the redux store
   dispatch(cancelledOrdersLoaded(cancelledOrders))
 
-  const tradeStream = await exchange.getPastEvents('Trade', {fromBlock: 0, toBlock: 'latest'})
+  // Fetch filled orders with the "Trade" event stream
+  const tradeStream = await exchange.getPastEvents('Trade', { fromBlock: 0, toBlock: 'latest' })
+  // Format filled orders
   const filledOrders = tradeStream.map((event) => event.returnValues)
+  // Add cancelled orders to the redux store
   dispatch(filledOrdersLoaded(filledOrders))
 
-  const orderStream = await exchange.getPastEvents('Order', {fromBlock: 0, toBlock: 'latest'})
+  // Load order stream
+  const orderStream = await exchange.getPastEvents('Order', { fromBlock: 0,  toBlock: 'latest' })
+  // Format order stream
   const allOrders = orderStream.map((event) => event.returnValues)
+  // Add open orders to the redux store
   dispatch(allOrdersLoaded(allOrders))
+}
+
+export const cancelOrder = (dispatch, exchange, order, account) => {
+  exchange.methods.cancelOrder(order.id).send({ from: account })
+  .on('transactionHash', (hash) => {
+     dispatch(orderCancelling())
+  })
+  .on('error', (error) => {
+    console.log(error)
+    window.alert('There was an error with the order cancellation!')
+  })
+}
+
+export const subscribeToEvents = async (exchange, dispatch) => {
+  exchange.events.Cancel({}, (error, event) => {
+    dispatch(orderCancelled(event.returnValues))
+  })
 }
