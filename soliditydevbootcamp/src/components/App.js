@@ -1,15 +1,18 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import './App.css';
-import Navbar from './Navbar';
+import React, { Component } from 'react'
+import './App.css'
+import Navbar from './Navbar'
 import Content from './Content'
-import { contractsLoadedSelector } from '../store/selectors';
-import { loadWeb3, loadAccount, loadToken, loadExchange } from '../store/interactions';
-import Token from '../abis/Token.json'
-
+import { connect } from 'react-redux'
+import {
+  loadWeb3,
+  loadAccount,
+  loadToken,
+  loadExchange
+} from '../store/interactions'
+import { contractsLoadedSelector } from '../store/selectors'
 
 class App extends Component {
-  UNSAFE_componentWillMount() {
+  componentWillMount() {
     this.loadBlockchainData(this.props.dispatch)
   }
 
@@ -31,20 +34,18 @@ class App extends Component {
 
   render() {
     return (
-      
       <div>
-        <Navbar/>
-        {this.props.contractsLoaded ? <Content/> : <div className="content"/>}
-        
+        <Navbar />
+        { this.props.contractsLoaded ? <Content /> : <div className="content"></div> }
       </div>
     );
   }
 }
 
-
 function mapStateToProps(state) {
-  return{
+  return {
     contractsLoaded: contractsLoadedSelector(state)
   }
 }
-export default connect(mapStateToProps)(App);
+
+export default connect(mapStateToProps)(App)
