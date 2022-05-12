@@ -1,6 +1,9 @@
 require('babel-register');
 require('babel-polyfill');
 require('dotenv').config();
+const HDWalletProvider = require('truffle-hdwallet-provider');
+const fs = require('fs');
+const privateKeys = process.env.PRIVATE_KEYS || ""
 
 /**
  * Use this file to configure your truffle project. It's seeded with some
@@ -37,12 +40,26 @@ module.exports = {
    *
    * $ truffle test --network <network-name>
    */
-
+  plugins: ['truffle-plugin-verify'],
+  api_keys: {
+    etherscan: process.env.ETHERSCAN_API_KEY
+  },
   networks: {
     development: {
      host: "127.0.0.1",     // Localhost (default: none)
      port: 7545,            // Standard Ethereum port (default: none)
      network_id: "*",       // Any network (default: none)
+    },
+    ropsten: {
+      provider: function() {
+        return new HDWalletProvider(
+          privateKeys.split(','),
+          `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`
+        )
+      },
+      gas: 5000000,
+      gasPrice: 25000000000,
+      network_id: 3
     },
     // Another network with more advanced options...
     // advanced: {

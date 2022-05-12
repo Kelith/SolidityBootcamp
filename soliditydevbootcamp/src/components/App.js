@@ -12,7 +12,7 @@ import {
 import { contractsLoadedSelector } from '../store/selectors'
 
 class App extends Component {
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.loadBlockchainData(this.props.dispatch)
   }
 

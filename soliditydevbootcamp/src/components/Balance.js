@@ -183,7 +183,7 @@ const showForm = (props) => {
 }
 
 class Balance extends Component {
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.loadBlockchainData()
   }
 

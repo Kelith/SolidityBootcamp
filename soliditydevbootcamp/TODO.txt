@@ -1,0 +1,5 @@
+Aggiusta i warning (alcuni erano già messi a posto nel commit precedente)
+Aggiungi file di descrizione repo
+Aggiungi qualche commento al codice
+Aggiungi messaggi personalizzati per gli errori
+Aggiungi immagine di JoJo
