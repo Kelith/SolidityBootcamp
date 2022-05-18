@@ -26,15 +26,37 @@ import Exchange from '../abis/Exchange.json'
 import { ETHER_ADDRESS } from '../helpers'
 
 export const loadWeb3 = async (dispatch) => {
-  if(typeof window.ethereum!=='undefined'){
-    const web3 = new Web3(window.ethereum)
-    dispatch(web3Loaded(web3))
-    return web3
-  } else {
-    window.alert('Please install MetaMask')
-    window.location.assign("https://metamask.io/")
-  }
-}
+  return new Promise((resolve, reject) => {
+    // Wait for loading completion to avoid race conditions with web3 injection timing.
+    window.addEventListener("load", async () => {
+      // Modern dapp browsers...
+      if (window.ethereum) {
+        const web3 = new Web3(window.ethereum);
+        try {
+          // Request account access if needed
+          await window.ethereum.enable();
+          // Acccounts now exposed
+          dispatch(web3Loaded(web3))
+          resolve(web3);
+        } catch (error) {
+          reject(error);
+        }
+      }
+      // Legacy dapp browsers...
+      else if (window.web3) {
+        // Use Mist/MetaMask's provider.
+        const web3 = window.web3;
+        console.log("Injected web3 detected.");
+        dispatch(web3Loaded(web3))
+        resolve(web3);
+      }
+      else {
+        window.alert('Please install MetaMask')
+        window.location.assign("https://metamask.io/")
+      }
+    });
+  });
+};
 
 export const loadAccount = async (web3, dispatch) => {
   const accounts = await web3.eth.getAccounts()
