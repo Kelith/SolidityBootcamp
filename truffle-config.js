@@ -50,16 +50,18 @@ module.exports = {
      port: 7545,            // Standard Ethereum port (default: none)
      network_id: "*",       // Any network (default: none)
     },
-    ropsten: {
-      provider: function() {
+    kovan: {
+      provider: ()  => {
         return new HDWalletProvider(
           privateKeys.split(','),
-          `https://ropsten.infura.io/v3/${process.env.INFURA_API_KEY}`
+          `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
+          0,
+          2,
         )
       },
       gas: 5000000,
       gasPrice: 25000000000,
-      network_id: 3
+      network_id: 42
     },
     // Another network with more advanced options...
     // advanced: {
